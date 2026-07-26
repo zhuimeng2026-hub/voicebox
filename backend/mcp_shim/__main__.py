@@ -27,7 +27,7 @@ import httpx
 CLIENT_ID_HEADER = "X-Voicebox-Client-Id"
 SESSION_HEADER = "mcp-session-id"
 HEALTH_TIMEOUT_S = 30.0
-DEFAULT_PORT = 17493
+DEFAULT_PORT = 38000
 
 
 def _err(msg: str) -> None:
