@@ -53,6 +53,7 @@ claude mcp add voicebox \
 | `voicebox.transcribe`     | Whisper transcription of a base64 blob or an absolute local path. |
 | `voicebox.list_captures`  | Recent captures (dictation / recording / file) with transcripts. |
 | `voicebox.list_profiles`  | Available voice profiles (cloned + preset). |
+| `voicebox.analyze_sample` | Analyze a voice sample's cloning suitability. Pass `audio_base64` or `audio_path` + `reference_text`. |
 
 All tools resolve voice profiles in this precedence:
 
@@ -62,6 +63,52 @@ All tools resolve voice profiles in this precedence:
 
 Bindings are managed via `GET|PUT /mcp/bindings` or in the app under
 Settings → MCP.
+
+### voicebox.analyze_sample examples
+
+Pass audio as base64 bytes (works from any MCP client):
+
+```json
+{
+  "profile_id": "abc-123",
+  "reference_text": "今天天气真好，阳光洒在窗台上...",
+  "audio_base64": "//uQxAAAAAANIAAAAAE..."
+}
+```
+
+Or pass a local file path (loopback callers only — Claude Code, local stdio):
+
+```json
+{
+  "profile_id": "abc-123",
+  "reference_text": "今天天气真好，阳光洒在窗台上...",
+  "audio_path": "/Users/me/recordings/sample.wav"
+}
+```
+
+Returns the quality report:
+
+```json
+{
+  "passed": true,
+  "score": 0.85,
+  "duration_seconds": 12.3,
+  "issues": [],
+  "warnings": ["录音时长可接受（12.3秒），但10秒以上效果更佳"],
+  "metrics": {
+    "duration_seconds": 12.3,
+    "rms": 0.0821,
+    "clip_ratio": 0.001,
+    "speech_fraction": 0.92,
+    "snr_db": 28.5
+  }
+}
+```
+
+The `passed` field is `false` when issues exist (too short, too quiet, too
+much silence). Check `issues` for blocking problems and `warnings` for
+suggestions. The `score` is a 0-1 quality estimate suitable for threshold
+gates in agent workflows.
 
 ## Debug with MCP Inspector
 
