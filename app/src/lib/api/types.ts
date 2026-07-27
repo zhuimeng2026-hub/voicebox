@@ -59,6 +59,15 @@ export interface ProfileSampleResponse {
   reference_text: string;
 }
 
+export interface SampleQualityResult {
+  passed: boolean;
+  score: number;
+  duration_seconds: number;
+  issues: string[];
+  warnings: string[];
+  metrics: Record<string, number>;
+}
+
 export interface EffectConfig {
   type: string;
   enabled: boolean;

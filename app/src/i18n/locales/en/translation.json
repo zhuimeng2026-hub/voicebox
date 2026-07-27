@@ -250,6 +250,7 @@
       "badge": "Built-in Voice",
       "note": "This profile uses a built-in voice. The voice cannot be changed after creation."
     },
+    "guidedRecording": "Guided Recording",
     "sampleTabs": {
       "upload": "Upload",
       "record": "Record",
@@ -332,8 +333,22 @@
       "sampleFailed": "Failed to add sample",
       "sampleFailedDescription": "Failed to add sample.",
       "sampleFailedRolledBack": "Failed to add sample. The profile was rolled back.",
-      "saveFailed": "Failed to save profile"
+      "saveFailed": "Failed to save profile",
+      "guidedSampleReady": "Guided recording sample ready"
     }
+  },
+  "guidedRecording": {
+    "readAloud": "Please read the following text aloud:",
+    "startRecording": "Start Recording",
+    "stopRecording": "Stop Recording",
+    "analyzing": "Analyzing recording quality...",
+    "qualityPassed": "Recording quality passed!",
+    "qualityFailed": "Recording quality check failed",
+    "scoreLabel": "Quality Score",
+    "durationLabel": "Duration",
+    "retry": "Re-record",
+    "acceptAnyway": "Use Anyway",
+    "useThisSample": "Use This Sample"
   },
   "audioSample": {
     "chooseFile": "Choose File",

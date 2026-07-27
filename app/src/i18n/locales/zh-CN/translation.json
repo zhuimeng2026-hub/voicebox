@@ -250,6 +250,7 @@
       "badge": "内置声音",
       "note": "此档案使用内置声音。创建后声音无法更改。"
     },
+    "guidedRecording": "引导录音",
     "sampleTabs": {
       "upload": "上传",
       "record": "录制",
@@ -332,8 +333,22 @@
       "sampleFailed": "添加样本失败",
       "sampleFailedDescription": "添加样本失败。",
       "sampleFailedRolledBack": "添加样本失败。档案已回滚。",
-      "saveFailed": "保存档案失败"
+      "saveFailed": "保存档案失败",
+      "guidedSampleReady": "引导录音样本已就绪"
     }
+  },
+  "guidedRecording": {
+    "readAloud": "请朗读以下文字：",
+    "startRecording": "开始录音",
+    "stopRecording": "停止录音",
+    "analyzing": "正在分析录音质量...",
+    "qualityPassed": "录音质量合格！",
+    "qualityFailed": "录音质量不达标",
+    "scoreLabel": "质量评分",
+    "durationLabel": "时长",
+    "retry": "重新录制",
+    "acceptAnyway": "仍然使用",
+    "useThisSample": "使用此样本"
   },
   "audioSample": {
     "chooseFile": "选择文件",

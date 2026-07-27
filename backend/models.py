@@ -815,3 +815,23 @@ class CloudStatusResponse(BaseModel):
     key_prefix: Optional[str] = None
     connected_at: Optional[datetime] = None
     dashboard_url: str
+
+
+# ─── Voice Sample Quality Analysis ─────────────────────────────────────
+
+
+class SampleQualityRequest(BaseModel):
+    """Request to analyze a voice sample's cloning suitability."""
+
+    reference_text: str = Field(..., min_length=1, max_length=1000)
+
+
+class SampleQualityResult(BaseModel):
+    """Result of voice sample quality analysis."""
+
+    passed: bool
+    score: float = Field(..., ge=0.0, le=1.0, description="Overall quality score 0-1")
+    duration_seconds: float
+    issues: list[str] = []
+    warnings: list[str] = []
+    metrics: dict = {}

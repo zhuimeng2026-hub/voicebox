@@ -21,7 +21,7 @@ export interface ProfileFormDraft {
   language: string;
   personality: string;
   referenceText: string;
-  sampleMode: 'upload' | 'record' | 'system';
+  sampleMode: 'upload' | 'record' | 'system' | 'guided';
   // Note: File objects can't be persisted, so we store metadata
   sampleFileName?: string;
   sampleFileType?: string;

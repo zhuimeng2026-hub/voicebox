@@ -191,6 +191,56 @@ async def add_profile_sample(
         Path(tmp_path).unlink(missing_ok=True)
 
 
+@router.post(
+    "/profiles/{profile_id}/samples/analyze",
+    response_model=models.SampleQualityResult,
+)
+async def analyze_sample_quality(
+    profile_id: str,
+    file: UploadFile = File(...),
+    reference_text: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Upload a voice sample and get a quality analysis without saving.
+
+    Use this for guided recording: upload, check quality, retry if needed.
+    When the user accepts the quality, POST to /profiles/{id}/samples to save.
+    """
+    from ..services.sample_quality import analyze_sample_quality as do_analyze
+
+    # Verify profile exists
+    profile = db.query(DBVoiceProfile).filter_by(id=profile_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    _allowed_audio_exts = {".wav", ".mp3", ".m4a", ".ogg", ".flac", ".aac", ".webm", ".opus"}
+    _uploaded_ext = Path(file.filename or "").suffix.lower()
+    file_suffix = _uploaded_ext if _uploaded_ext in _allowed_audio_exts else ".wav"
+
+    with tempfile.NamedTemporaryFile(suffix=file_suffix, delete=False) as tmp:
+        total_size = 0
+        while chunk := await file.read(SAMPLE_UPLOAD_CHUNK_SIZE):
+            total_size += len(chunk)
+            if total_size > SAMPLE_MAX_FILE_SIZE:
+                Path(tmp.name).unlink(missing_ok=True)
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"File too large (max {SAMPLE_MAX_FILE_SIZE // (1024 * 1024)} MB)",
+                )
+            tmp.write(chunk)
+        tmp_path = tmp.name
+
+    try:
+        result = await do_analyze(tmp_path, reference_text)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Quality analysis failed: {str(e)}"
+        )
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+
+
 @router.get("/profiles/{profile_id}/samples", response_model=list[models.ProfileSampleResponse])
 async def get_profile_samples(
     profile_id: str,

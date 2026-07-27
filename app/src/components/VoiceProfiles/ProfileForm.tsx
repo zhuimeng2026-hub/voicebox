@@ -58,6 +58,7 @@ import { type ProfileFormDraft, useUIStore } from '@/stores/uiStore';
 import { AudioSampleRecording } from './AudioSampleRecording';
 import { AudioSampleSystem } from './AudioSampleSystem';
 import { AudioSampleUpload } from './AudioSampleUpload';
+import { GuidedRecording } from './GuidedRecording';
 import { SampleList } from './SampleList';
 
 const MAX_AUDIO_DURATION_SECONDS = 30;
@@ -148,7 +149,7 @@ export function ProfileForm() {
   const transcribe = useTranscription();
   const { toast } = useToast();
   const [voiceSource, setVoiceSource] = useState<'clone' | 'builtin'>('clone');
-  const [sampleMode, setSampleMode] = useState<'upload' | 'record' | 'system'>('record');
+  const [sampleMode, setSampleMode] = useState<'upload' | 'record' | 'system' | 'guided'>('record');
   const [audioDuration, setAudioDuration] = useState<number | null>(null);
   const [isValidatingAudio, setIsValidatingAudio] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -1102,8 +1103,56 @@ export function ProfileForm() {
                         </p>
                       </div>
                     ) : (
-                      <div>
-                        <SampleList profileId={editingProfileId} />
+                      <div className="space-y-4 pt-4">
+                        <div className="flex items-center gap-2 border-b pb-2">
+                          <button
+                            type="button"
+                            onClick={() => setSampleMode('record')}
+                            className={`text-sm px-3 py-1.5 rounded-md transition-colors ${
+                              sampleMode === 'record'
+                                ? 'bg-accent text-accent-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            {t('sampleList.title')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSampleMode('guided')}
+                            className={`text-sm px-3 py-1.5 rounded-md transition-colors ${
+                              sampleMode === 'guided'
+                                ? 'bg-accent text-accent-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <Mic className="w-3.5 h-3.5 inline mr-1" />
+                            {t('profileForm.guidedRecording')}
+                          </button>
+                        </div>
+                        {sampleMode === 'record' ? (
+                          <SampleList profileId={editingProfileId} />
+                        ) : (
+                          <GuidedRecording
+                            profileId={editingProfileId}
+                            onSampleReady={(blob, text, _quality) => {
+                              const file = new File(
+                                [blob],
+                                `guided-recording-${Date.now()}.webm`,
+                                { type: blob.type || 'audio/webm' },
+                              );
+                              addSample.mutate({
+                                profileId: editingProfileId,
+                                file,
+                                referenceText: text,
+                              });
+                              toast({
+                                title: t('profileForm.toast.guidedSampleReady'),
+                              });
+                              setSampleMode('record');
+                            }}
+                            onCancel={() => setSampleMode('record')}
+                          />
+                        )}
                       </div>
                     ))
                   )}

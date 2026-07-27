@@ -21,6 +21,7 @@ import type {
   PersonalityTextResponse,
   ProfileSampleResponse,
   RocmStatus,
+  SampleQualityResult,
   StoryCreate,
   StoryDetailResponse,
   StoryItemBatchUpdate,
@@ -165,6 +166,28 @@ class ApiClient {
         detail: response.statusText,
       }));
       throw new Error(formatErrorDetail(error.detail, `HTTP error! status: ${response.status}`));
+    }
+
+    return response.json();
+  }
+
+  async analyzeSampleQuality(
+    profileId: string,
+    formData: FormData,
+  ): Promise<SampleQualityResult> {
+    const url = `${this.getBaseUrl()}/profiles/${profileId}/samples/analyze`;
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        detail: response.statusText,
+      }));
+      throw new Error(
+        formatErrorDetail(error.detail, 'Quality analysis failed'),
+      );
     }
 
     return response.json();
