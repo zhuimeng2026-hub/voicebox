@@ -216,6 +216,62 @@ def register_tools(mcp: FastMCP) -> None:
         finally:
             db.close()
 
+    @mcp.tool(
+        name="voicebox.analyze_sample",
+        description=(
+            "Upload a voice sample and analyze its quality for voice cloning "
+            "suitability. Returns a score (0-1), duration, issues, and warnings. "
+            "Pass exactly one of `audio_base64` (bytes as base64) or "
+            "`audio_path` (absolute local file path — loopback callers only)."
+        ),
+    )
+    async def voicebox_analyze_sample(
+        profile_id: str,
+        reference_text: str,
+        audio_base64: str | None = None,
+        audio_path: str | None = None,
+    ) -> dict[str, Any]:
+        """Analyze a voice sample's cloning suitability.
+
+        ``profile_id`` is the target voice profile id (must already exist).
+        ``reference_text`` is the exact text spoken in the audio.
+        Pass exactly one of ``audio_base64`` or ``audio_path``.
+        """
+        if bool(audio_base64) == bool(audio_path):
+            raise ValueError(
+                "Pass exactly one of `audio_base64` or `audio_path`."
+            )
+
+        from ..services.sample_quality import analyze_sample_quality as do_analyze
+
+        if audio_path is not None:
+            if not request_is_loopback():
+                raise ValueError(
+                    "`audio_path` is only available to loopback callers — "
+                    "remote callers must use `audio_base64`."
+                )
+            path = Path(audio_path)
+            if not path.is_absolute():
+                raise ValueError("`audio_path` must be absolute.")
+            if not path.is_file():
+                raise ValueError(f"File not found: {audio_path}")
+            result = await do_analyze(str(path), reference_text)
+            return result
+
+        # Base64 mode: decode into temp file, analyze, clean up.
+        try:
+            raw = b64.b64decode(audio_base64, validate=True)
+        except Exception as exc:
+            raise ValueError(f"Invalid audio_base64: {exc}") from exc
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp.write(raw)
+            tmp_path = Path(tmp.name)
+        try:
+            result = await do_analyze(str(tmp_path), reference_text)
+            return result
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
 
 # ─── Speak helper ──────────────────────────────────────────────────────────
 
