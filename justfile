@@ -136,7 +136,9 @@ dev: _ensure-venv _ensure-sidecar
         echo "Backend already running on http://localhost:17493"
     else
         echo "Starting backend on http://localhost:17493 ..."
-        {{ venv_bin }}/uvicorn backend.main:app --reload --port 17493 &
+        # HF_HUB_OFFLINE=1: prefer local HF cache, skip ETag HEAD retries (Kokoro voices etc).
+        # Override with `unset HF_HUB_OFFLINE` if you need to download a brand-new model.
+        HF_HUB_OFFLINE=1 {{ venv_bin }}/uvicorn backend.main:app --reload --port 17493 &
         backend_pid=$!
         sleep 2
     fi
@@ -151,6 +153,7 @@ dev: _ensure-venv _ensure-sidecar
     $backendJob = $null; \
     try { $null = Invoke-WebRequest -Uri "http://127.0.0.1:17493/health" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop; Write-Host "Backend already running on http://localhost:17493" } catch { \
         Write-Host "Starting backend on http://localhost:17493 ..."; \
+        $env:HF_HUB_OFFLINE = "1"; \
         $backendJob = Start-Process -PassThru -NoNewWindow -FilePath "{{ python }}" -ArgumentList "-m","uvicorn","backend.main:app","--reload","--port","17493"; \
         Start-Sleep -Seconds 2; \
     }; \
@@ -160,11 +163,13 @@ dev: _ensure-venv _ensure-sidecar
 # Start backend only
 [unix]
 dev-backend: _ensure-venv
-    {{ venv_bin }}/uvicorn backend.main:app --reload --port 17493
+    # HF_HUB_OFFLINE=1: prefer local HF cache, skip ETag HEAD retries (Kokoro voices etc).
+    # Override with `unset HF_HUB_OFFLINE` if you need to download a brand-new model.
+    HF_HUB_OFFLINE=1 {{ venv_bin }}/uvicorn backend.main:app --reload --port 17493
 
 [windows]
 dev-backend: _ensure-venv
-    & "{{ python }}" -m uvicorn backend.main:app --reload --port 17493
+    $env:HF_HUB_OFFLINE = "1"; & "{{ python }}" -m uvicorn backend.main:app --reload --port 17493
 
 # Start Tauri desktop app only (backend must be running separately)
 [unix]
@@ -186,7 +191,8 @@ dev-web: _ensure-venv
         echo "Backend already running on http://localhost:17493"
     else
         echo "Starting backend on http://localhost:17493 ..."
-        {{ venv_bin }}/uvicorn backend.main:app --reload --port 17493 &
+        # HF_HUB_OFFLINE=1: prefer local HF cache, skip ETag HEAD retries (Kokoro voices etc).
+        HF_HUB_OFFLINE=1 {{ venv_bin }}/uvicorn backend.main:app --reload --port 17493 &
         backend_pid=$!
         sleep 2
     fi
@@ -200,6 +206,7 @@ dev-web: _ensure-venv
     $backendJob = $null; \
     try { $null = Invoke-WebRequest -Uri "http://127.0.0.1:17493/health" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop; Write-Host "Backend already running on http://localhost:17493" } catch { \
         Write-Host "Starting backend on http://localhost:17493 ..."; \
+        $env:HF_HUB_OFFLINE = "1"; \
         $backendJob = Start-Process -PassThru -NoNewWindow -FilePath "{{ python }}" -ArgumentList "-m","uvicorn","backend.main:app","--reload","--port","17493"; \
         Start-Sleep -Seconds 2; \
     }; \
